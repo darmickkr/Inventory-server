@@ -1,0 +1,129 @@
+================================================================================
+         END-TO-END DEPLOYMENT & INSTALLATION RESOURCE GUIDE
+================================================================================
+Student Name: Darmick
+Application:  Inventory Management System (Spring MVC Framework)
+Load Balancer: Nginx 1.30.3 (Reverse Proxy Node Cluster Configuration)
+Servers:      Apache Tomcat 9.0 (Triple-Node Architecture on Windows)
+================================================================================
+
+--------------------------------------------------------------------------------
+STAGE 1: PROJECT SCAFFOLDING & COMPILATION
+--------------------------------------------------------------------------------
+1. Launch your VS Code terminal and execute the official Maven command to build 
+   your Java project structure automatically:
+   
+   mvn archetype:generate "-DgroupId=com.inventory" "-DartifactId=inventory-system" "-DarchetypeArtifactId=maven-archetype-webapp" "-DinteractiveMode=false"
+
+2. Move straight into the generated directory:
+   cd inventory-system
+
+3. Run these automated directory paths commands to inject the missing Java source 
+   folders into your project layout:
+   
+   mkdir -p src/main/java/com/inventory/controller
+   mkdir -p src/main/webapp/WEB-INF/views
+
+4. Open the project inside VS Code editor window layout:
+   code .
+
+5. Open "src/main/webapp/WEB-INF/views/" and create your interface dashboard view 
+   named "dashboard.jsp". Paste your UI template code, ensuring line 65 contains the 
+   dynamic port locator script:
+   <%= request.getLocalPort() %>
+
+6. Open "src/main/java/com/inventory/controller/" and create "InventoryController.java" 
+   to handle request mapping and inventory data arrays.
+
+7. Return to your project root terminal path tab context and execute the compilation lifecycle:
+   mvn clean package
+
+* EXPECTED OUTPUT: "BUILD SUCCESS" text string on your terminal screen. A packaged 
+  "inventory-system.war" file will appear inside your new "target/" directory.
+
+--------------------------------------------------------------------------------
+STAGE 2: CLUSTER CONFIGURATION (TOMCAT PROVISIONING)
+--------------------------------------------------------------------------------
+1. Download the "64-bit Windows zip" version of Apache Tomcat 9.0.
+2. Unzip the file and copy the main folder three times onto your Desktop path. 
+   Rename the directories to:
+   - C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat1\Tomcat 9.0
+   - C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat2\Tomcat 9.0
+   - C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat3\Tomcat 9.0
+
+3. Modify the server configuration profiles to prevent system port-binding errors:
+   * Open tomcat1 "conf/server.xml": Set Shutdown port="8016" | Connector port="8091"
+   * Open tomcat2 "conf/server.xml": Set Shutdown port="8017" | Connector port="8092"
+   * Open tomcat3 "conf/server.xml": Set Shutdown port="8018" | Connector port="8093"
+
+4. Copy the compiled WAR file out of your project's "target/" directory and paste a 
+   copy into the "webapps/" folder of all three Tomcat nodes.
+
+--------------------------------------------------------------------------------
+STAGE 3: BOOTING INFRASTRUCTURE NODE PIPELINES
+--------------------------------------------------------------------------------
+1. Open three separate terminal tabs inside your VS Code panel window layout.
+2. Run these commands to set up and launch your Tomcat servers independently:
+
+   * In Terminal Tab 1 (Tomcat 1):
+     $env:CATALINA_HOME="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat1\Tomcat 9.0"
+     $env:CATALINA_BASE="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat1\Tomcat 9.0"
+     & "$env:CATALINA_HOME\bin\startup.bat"
+
+   * In Terminal Tab 2 (Tomcat 2):
+     $env:CATALINA_HOME="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat2\Tomcat 9.0"
+     $env:CATALINA_BASE="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat2\Tomcat 9.0"
+     & "$env:CATALINA_HOME\bin\startup.bat"
+
+   * In Terminal Tab 3 (Tomcat 3):
+     $env:CATALINA_HOME="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat3\Tomcat 9.0"
+     $env:CATALINA_BASE="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat3\Tomcat 9.0"
+     & "$env:CATALINA_HOME\bin\startup.bat"
+
+* EXPECTED OUTPUT: Three separate black console windows will flash onto your screen. 
+  Tomcat will extract the files automatically into live application directories.
+
+--------------------------------------------------------------------------------
+STAGE 4: CONFIGURING NGINX PROXY BALANCING
+--------------------------------------------------------------------------------
+1. Unzip the stable Nginx Windows distribution folder directly into: `C:\nginx-1.30.3`
+2. Open the file `C:\nginx-1.30.3\conf\nginx.conf` in VS Code.
+3. Replace all contents inside with your custom proxy architecture parameters:
+
+   events {
+       worker_connections 1024;
+   }
+   http {
+       upstream inventory_cluster {
+           server 127.0.0.1:8091;
+           server 127.0.0.1:8092;
+           server 127.0.0.1:8093;
+       }
+       server {
+           listen 8000;
+           server_name localhost;
+           location / {
+               proxy_pass http://inventory_cluster;
+               proxy_set_header Host $host;
+               proxy_set_header X-Real-IP $remote_addr;
+           }
+       }
+   }
+
+4. Clear any broken background tasks out of your memory, move into your Nginx folder, 
+   and launch your proxy server in foreground tracking mode:
+   
+   taskkill /f /im nginx.exe 2>$null
+   cd C:\nginx-1.30.3
+   .\nginx.exe
+
+--------------------------------------------------------------------------------
+STAGE 5: SYSTEM VERIFICATION PROCESS
+--------------------------------------------------------------------------------
+1. Launch Google Chrome browser and open a fresh **Incognito Window** (`Ctrl + Shift + N`).
+2. Go to the primary load balancer endpoint: `http://localhost:8000/inventory-system/`
+3. Click the refresh button multiple times.
+4. **Validation Proof:** The green badge text on your screen will alternate between 
+   "8091", "8092", and "8093". This proves that Nginx is successfully load-balancing 
+   requests across your Tomcat instances!
+================================================================================

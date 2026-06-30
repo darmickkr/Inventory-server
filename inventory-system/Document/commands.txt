@@ -1,0 +1,137 @@
+================================================================================
+                    DEVOPS COMMAND REFERENCE & SYSTEM USE CASES
+================================================================================
+Student Name: Darmick
+Application:  Inventory Management System (Spring MVC)
+Platform:     Windows 10/11 Native (PowerShell / Command Prompt Contexts)
+================================================================================
+
+--------------------------------------------------------------------------------
+1. PROJECT CREATION AND SCAFFOLDING
+--------------------------------------------------------------------------------
+* COMMAND:
+  mvn archetype:generate "-DgroupId=com.inventory" "-DartifactId=inventory-system" "-DarchetypeArtifactId=maven-archetype-webapp" "-DinteractiveMode=false"
+
+* TECHNICAL EXPLANATION:
+  This instruction calls the Apache Maven Archetype Plugin. It tells Maven to download 
+  and use the default "maven-archetype-webapp" template. It automatically configures 
+  the project grouping (groupId) and project identity folder name (artifactId) 
+  while bypassing the interactive confirmation prompts (-DinteractiveMode=false).
+
+* PROJECT USE CASE:
+  Run at the absolute beginning of the assignment to automatically generate a clean, 
+  standard Java Web Archive (.war) template directory layout complete with a 
+  default pom.xml and standard WEB-INF folder architecture.
+
+--------------------------------------------------------------------------------
+2. COMPILATION AND ARTIFACT PACKAGING
+--------------------------------------------------------------------------------
+* COMMAND:
+  mvn clean package
+
+* TECHNICAL EXPLANATION:
+  A chained lifecycle execution command. The "clean" phase wipes out any old 
+  compiled files by deleting the entire "target/" directory. The "package" phase 
+  takes the newly modified source code, compiles it using the Java Compiler (javac), 
+  and packages the compiled bytecode alongside web components into a deployable 
+  Web Archive (.war) file.
+
+* PROJECT USE CASE:
+  Executed inside the project directory whenever changes were made to Java controller files 
+  or JSP views. This ensured that a fresh, un-cached "inventory-system.war" file was 
+  generated for deployment.
+
+--------------------------------------------------------------------------------
+3. DIRECTORY TREE MANIPULATION
+--------------------------------------------------------------------------------
+* COMMAND:
+  mkdir -p src/main/java/com/inventory/controller
+
+* TECHNICAL EXPLANATION:
+  The directory structure allocation tool. The flag "-p" serves as an automated path 
+  validation switch. It tells the terminal to create all missing nested parent folders 
+  across the specified path at once, and safely ignores the action if the folders 
+  already exist.
+
+* PROJECT USE CASE:
+  Run right after the Maven scaffolding step to instantly create the missing 
+  Java package source paths for your Spring MVC controller code.
+
+--------------------------------------------------------------------------------
+4. INFRASTRUCTURE ISOLATION VARIABLES
+--------------------------------------------------------------------------------
+* COMMAND:
+  $env:CATALINA_HOME="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat1\Tomcat 9.0"
+  $env:CATALINA_BASE="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat1\Tomcat 9.0"
+
+* TECHNICAL EXPLANATION:
+  These commands explicitly inject custom environmental string variables directly 
+  into the active terminal session. "CATALINA_HOME" tells the script where the primary 
+  Tomcat server core binaries live. "CATALINA_BASE" identifies where that specific 
+  instance's configuration and deployment folders sit.
+
+* PROJECT USE CASE:
+  Run at the top of each independent VS Code terminal tab right before starting a server. 
+  This forced each instance to load using its own folder path instead of clashing with 
+  other running instances.
+
+--------------------------------------------------------------------------------
+5. EXECUTION CALL OPERATOR
+--------------------------------------------------------------------------------
+* COMMAND:
+  & "C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat1\Tomcat 9.0\bin\startup.bat"
+
+* TECHNICAL EXPLANATION:
+  The ampersand (&) acts as the native PowerShell Call Operator. It instructs 
+  PowerShell to treat the enclosed quoted string literal path as an active, 
+  executable binary command rather than a plain string message.
+
+* PROJECT USE CASE:
+  Used to safely launch the server startup script, bypassing the file execution 
+  failures caused by the blank space inside the folder name ("Tomcat 9.0").
+
+--------------------------------------------------------------------------------
+6. DEPLOYMENT ASSET MANIPULATION
+--------------------------------------------------------------------------------
+* COMMAND:
+  Copy-Item -Path "target\inventory-system.war" -Destination "C:\...\webapps\" -Force
+
+* TECHNICAL EXPLANATION:
+  The core PowerShell item transfer command. The "-Force" parameter acts as an 
+  overwrite switch, forcing the system to replace any pre-existing web archive 
+  files and breaking old filesystem locks.
+
+* PROJECT USE CASE:
+  Used to copy your compiled application file from your project target directory 
+  straight into the webapps deployment folders of all three Tomcat nodes.
+
+--------------------------------------------------------------------------------
+7. FORCED TASK TERMINATION
+--------------------------------------------------------------------------------
+* COMMAND:
+  taskkill /f /im nginx.exe
+
+* TECHNICAL EXPLANATION:
+  An administrative command-line tool used to terminate active processes. The flag 
+  "/f" forces an immediate shutdown, bypassing user confirmation checks. The flag 
+  "/im" targets the application using its exact image name (nginx.exe).
+
+* PROJECT USE CASE:
+  Run whenever Nginx locked up or needed to reload its routing configurations. This 
+  ensured that all silent background Nginx tasks were completely cleared from your 
+  computer's memory before a fresh restart.
+
+--------------------------------------------------------------------------------
+8. PROXIED TRAFFIC ROUTING MANAGEMENT
+--------------------------------------------------------------------------------
+* COMMAND:
+  .\nginx.exe
+
+* TECHNICAL EXPLANATION:
+  Executes the Nginx binary launcher inside the current terminal directory. Running it 
+  this way links the application loop directly to that terminal tab (foreground execution).
+
+* PROJECT USE CASE:
+  Run inside your Nginx directory tab to launch your load balancer. Keeping it active 
+  inside that tab allowed you to easily monitor startup events and ensure it stayed running.
+================================================================================

@@ -1,0 +1,95 @@
+================================================================================
+                    DEVOPS ARCHITECTURAL CHALLENGES & RESOLUTIONS
+================================================================================
+Student Name: Darmick
+Application:  Inventory Management System (Spring MVC)
+Infrastructure: Multi-Instance Tomcat 9.0 Cluster & Nginx Reverse Proxy
+================================================================================
+
+--------------------------------------------------------------------------------
+CHALLENGE 1: MULTI-INSTANCE NETWORK PORT BINDING CLASHES
+--------------------------------------------------------------------------------
+* THE HURDLE:
+  By default, Apache Tomcat runs on Port 8080 and listens for a shutdown command 
+  on Port 8005. Attempting to spin up three independent Tomcat servers on the 
+  same local loopback adapter (127.0.0.1) caused immediate socket crashes. The 
+  first node locked the ports, causing the second and third nodes to throw fatal 
+  "java.net.BindException: Address already in use" errors during boot.
+
+* TECHNICAL BOTTLENECK:
+  A physical operating system socket network interface can only bind a single 
+  operational process to a specific port address at any given moment.
+
+* DEV-OPS RESOLUTION STRATEGY:
+  Opened the "conf/server.xml" configuration script for each cloned node inside 
+  the VS Code editor. Manually mapped out completely non-overlapping network port 
+  parameters across all instances:
+  - Instance 1: Main HTTP Connector = 8091 | Shutdown Listener = 8016
+  - Instance 2: Main HTTP Connector = 8092 | Shutdown Listener = 8017
+  - Instance 3: Main HTTP Connector = 8093 | Shutdown Listener = 8018
+  This allowed all three server engines to boot simultaneously without any conflicts.
+
+--------------------------------------------------------------------------------
+CHALLENGE 2: PLATFORM SOCKET ACCESS PERMISSIONS ON PORT 80
+--------------------------------------------------------------------------------
+* THE HURDLE:
+  When trying to start the Nginx load balancer natively on Windows using its 
+  standard web file parameters, Nginx immediately crashed and recorded a fatal 
+  system emergency log entry: "bind() to 0.0.0.0:80 failed (10013: An attempt 
+  was made to access a socket in a way forbidden by its access permissions)".
+
+* TECHNICAL BOTTLENECK:
+  Port 80 is the standard global default port for regular HTTP internet traffic. 
+  Windows security features or native background operating system processes 
+  (such as World Wide Web Publishing Services or Microsoft IIS) permanently hold 
+  Port 80, blocking third-party open-source binaries from controlling that socket.
+
+* DEV-OPS RESOLUTION STRATEGY:
+  Modified the server listening directives inside the "conf/nginx.conf" file. 
+  Changed line 14 from "listen 80;" to an open, non-privileged port: "listen 8000;". 
+  This safely bypassed the system security lock, allowing Nginx to run smoothly 
+  as a traffic controller on port 8000.
+
+--------------------------------------------------------------------------------
+CHALLENGE 3: ENVIRONMENT POLUTION AND LOCKED PATHWAY POINTERS
+--------------------------------------------------------------------------------
+* THE HURDLE:
+  When executing the Tomcat startup script files, the terminal threw an environment 
+  variable definition block error. Even when a node started successfully, it would 
+  sometimes accidentally execute the file contents of Tomcat 1 instead of its own 
+  local application directory contents.
+
+* TECHNICAL BOTTLENECK:
+  Running multiple infrastructure operations sequentially in a single terminal tab 
+  pollutes the environment workspace. The terminal saved the first folder path to 
+  the system variable string ($env:CATALINA_HOME), causing all later commands to 
+  use that first folder by mistake.
+
+* DEV-OPS RESOLUTION STRATEGY:
+  Abandoned using a single terminal tab context. Leveraged the multi-tab layout 
+  feature inside VS Code to isolate each node into its own dedicated terminal interface. 
+  Explicitly re-declared the exact paths at the top of each respective tab:
+  $env:CATALINA_HOME="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat2\Tomcat 9.0"
+  This created strict boundaries between the node processes and ensured they ran 
+  independently.
+
+--------------------------------------------------------------------------------
+CHALLENGE 4: AGGRESSIVE BROWSER SESSION AND ROUTING CACHE LOCKS
+--------------------------------------------------------------------------------
+* THE HURDLE:
+  Even after fixing all Nginx proxy settings and setting up the Tomcat nodes, the 
+  web browser continuously displayed broken "502 Bad Gateway" or "404 Not Found" 
+  screens when accessing "http://localhost:8000/inventory-system/".
+
+* TECHNICAL BOTTLENECK:
+  Modern web browsers (like Google Chrome) utilize heavy internal cache engines. 
+  When a URL fails initially, the browser saves that broken error page locally. 
+  When you hit refresh, the browser simply loads the saved error page from your 
+  hard drive instead of sending a new request to Nginx.
+
+* DEV-OPS RESOLUTION STRATEGY:
+  Bypassed the browser cache layer entirely by forcing testing to run inside a fresh 
+  **Chrome Incognito Window** (Ctrl + Shift + N). This forced the browser to request 
+  a fresh layout from Nginx every time the page was refreshed. This allowed us to 
+  properly verify that Nginx was successfully routing requests using its round-robin algorithm.
+================================================================================

@@ -1,0 +1,156 @@
+================================================================================
+                       DEVOPS CLUSTER TROUBLESHOOTING LOG
+================================================================================
+Student Name: Darmick
+Application:  Inventory Management System (Spring MVC)
+Platform:     Windows 10/11 Native (PowerShell / CMD / VS Code)
+Target Paths: C:\Users\darmick.kr\Desktop\Tomcat-Cluster\
+              C:\nginx-1.30.3\
+================================================================================
+
+--------------------------------------------------------------------------------
+[INCIDENT 01] HTTP STATUS 404 - APPLICATION CONTEXT NOT FOUND ON BACKEND NODE
+--------------------------------------------------------------------------------
+* DIAGRAM OF PROBLEM:
+  [Browser Request] ---> (Tomcat Port 8092 Active) ---> [Empty Web Context] ---> 404 Error
+  * Webapps Directory State:
+    └── C:\...\tomcat1\Tomcat 9.0\webapps\
+        └── inventory-system.war  (Sitting idle / unextracted)
+
+* SYMPTOM: 
+  Navigating directly to a Tomcat instance url threw a clean Apache Tomcat branded 
+  "404 - Not Found" error page.
+
+* ROOT CAUSE: 
+  Tomcat's background tracking manager failed to auto-deploy the web archive. 
+  The file was either locked by Windows during transfer, or the Tomcat background 
+  process engine was completely asleep/frozen, failing to watch the webapps folder.
+
+* STEP-BY-STEP RESOLUTION:
+  1. Terminated all running black command prompt boxes to free file locks.
+  2. Executed a clean filesystem purge to remove broken deployment remnants:
+     Remove-Item -Path "C:\...\Tomcat 9.0\webapps\inventory-system" -Recurse -Force
+  3. Re-copied a freshly packaged WAR file directly from the Maven project build.
+  4. Explicitly triggered the initialization batch script in an isolated shell.
+  5. Monitored the folder for 5 seconds until Tomcat unpacked the archive into 
+     a matching application folder automatically.
+
+--------------------------------------------------------------------------------
+[INCIDENT 02] POWERSHELL COMMAND NOT RECOGNIZED (WHITESPACE PATH PARSING)
+--------------------------------------------------------------------------------
+* DIAGRAM OF PROBLEM:
+  Command: cd C:\Tomcat-Cluster\tomcat1\Tomcat 9.0\conf\server.xml
+  Parsing: [Argument 1: cd] -> [Argument 2: C:\...\tomcat1\Tomcat] -> [Error: Broken Path]
+
+* SYMPTOM: 
+  PowerShell threw a fatal `CommandNotFoundException` or parameter alignment mismatch 
+  error whenever terminal operations were directed toward the Tomcat folders.
+
+* ROOT CAUSE: 
+  The application folders contained whitespace characters within their names 
+  ("Tomcat 9.0"). PowerShell natively breaks execution strings at spaces, 
+  mistaking everything after the space for an unmapped second command argument.
+
+* STEP-BY-STEP RESOLUTION:
+  1. Wrapped all file system paths tightly inside double quotation marks (" ").
+  2. Applied the PowerShell call operator token ampersand (&) at the front of 
+     the file string when launching batch executables:
+     & "C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat1\Tomcat 9.0\bin\startup.bat"
+
+--------------------------------------------------------------------------------
+[INCIDENT 03] ENVIRONMENT VARIABLES LOCK IN THE TERMINAL SPACE
+--------------------------------------------------------------------------------
+* DIAGRAM OF PROBLEM:
+  [Single Terminal Tab] ──> Set: tomcat1 ──> Starts Tomcat 1 (OK)
+                        └──> Set: tomcat2 ──> Points to tomcat1 path! (CRASH)
+
+* SYMPTOM: 
+  Tomcat 1 launched perfectly, but Tomcat 2 and Tomcat 3 refused to start, 
+  throwing environment initialization blocks or restarting Tomcat 1 by mistake.
+
+* ROOT CAUSE: 
+  Running multiple Tomcat nodes sequentially inside the exact same terminal tab 
+  caused Windows shell variable pollution. The current tab locked its variable pointers 
+  ($env:CATALINA_HOME) to the very first folder path it executed, blocking others.
+
+* STEP-BY-STEP RESOLUTION:
+  1. Avoided using a single monolithic shell window context.
+  2. Opened 3 separate, distinct terminal tabs inside VS Code (named Tab 1, Tab 2, Tab 3).
+  3. Manually declared separate variables at the top of each tab before launching:
+     $env:CATALINA_HOME="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat2\Tomcat 9.0"
+
+--------------------------------------------------------------------------------
+[INCIDENT 04] NGINX PORT ACCESS DENIED (SOCKET BINDER ACCESS ERROR 10013)
+--------------------------------------------------------------------------------
+* DIAGRAM OF PROBLEM:
+  [Nginx Booting] ──> Wants Port 80 ──X (BLOCKED) ──> [Windows IIS System Process]
+
+* SYMPTOM: 
+  Executing `.\nginx.exe` failed instantly, printing standard socket error log messages: 
+  "bind() to 0.0.0.0:80 failed (10013: Access permissions forbidden)".
+
+* ROOT CAUSE: 
+  Nginx defaults to standard web port 80. Windows native background services (like 
+  Microsoft IIS or World Wide Web Publishing) permanently hold port 80, blocking 
+  external network applications from binding to it.
+
+* STEP-BY-STEP RESOLUTION:
+  1. Opened "C:\nginx-1.30.3\conf\nginx.conf" in VS Code.
+  2. Located the primary network listening line block configuration array.
+  3. Changed the entry `listen 80;` to an alternative unassigned port number: `listen 8000;`
+  4. Saved modifications and launched Nginx on the alternative port successfully.
+
+--------------------------------------------------------------------------------
+[INCIDENT 05] NGINX 502 BAD GATEWAY SCREEN RENDERING
+--------------------------------------------------------------------------------
+* DIAGRAM OF PROBLEM:
+  [Browser: Port 8000] ───> [Nginx: Alive] ───X (Cannot Connect) ───> [Tomcats: Asleep]
+
+* SYMPTOM: 
+  Browsing to the application through the load balancer port path loaded an Nginx 
+  branded "502 Bad Gateway" white error screen.
+
+* ROOT CAUSE: 
+  The Nginx traffic proxy layer was running fine, but it was unable to bridge 
+  connections to the backend servers. Either the Tomcat nodes had gone to sleep, 
+  or the configuration was using string headers like "localhost", which triggers 
+  unstable loopback processing delays on Windows machines.
+
+* STEP-BY-STEP RESOLUTION:
+  1. Verified each Tomcat node was awake by visiting their direct URLs in Chrome.
+  2. Opened the "nginx.conf" properties file configuration map layout.
+  3. Replaced all generic "localhost" string names inside the upstream block 
+     with explicit numerical loopback IP address structures:
+     upstream inventory_cluster {
+         server 127.0.0.1:8091;
+         server 127.0.0.1:8092;
+     }
+  4. Purged frozen background instances completely out of memory: `taskkill /f /im nginx.exe`
+  5. Restarted Nginx in the foreground to successfully complete proxy routing.
+
+--------------------------------------------------------------------------------
+[INCIDENT 06] STATIC INTERFACE FREEZE (PORT BALANCING UNCHANGING ON REFRESH)
+--------------------------------------------------------------------------------
+* DIAGRAM OF PROBLEM:
+  [Refresh Clicked] ──> [Nginx Routes Traffic] ──> [Tomcat Processed Page]
+       ▲                                                   │
+       └───── UI Port Badge Remains Hardcoded: "DEFAULT SERVER" <───┘
+
+* SYMPTOM: 
+  The load balanced link loaded successfully, but hitting the browser refresh button 
+  repeatedly left the status badge text frozen on "CLUSTER NODE: DEFAULT SERVER".
+
+* ROOT CAUSE: 
+  The project's frontend layout file contained plain text hardcoded into the JSP view file. 
+  Because there was no live script to pull the active port number, the browser displayed 
+  the exact same layout string regardless of which server handled the connection.
+
+* STEP-BY-STEP RESOLUTION:
+  1. Opened "src/main/webapp/WEB-INF/views/dashboard.jsp" in VS Code.
+  2. Navigated to line 65 and stripped away the static text string layout placeholder.
+  3. Inserted the dynamic Java expression tag runtime script syntax handler:
+     <%= request.getLocalPort() %>
+  4. Saved the workspace, and generated a fresh WAR package by running: `mvn clean package`
+  5. Re-deployed the artifact and verified active shifting between port labels inside 
+     a clean Chrome Incognito Window.
+================================================================================

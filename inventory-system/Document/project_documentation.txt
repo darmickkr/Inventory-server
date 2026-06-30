@@ -1,0 +1,221 @@
+Here is your complete, comprehensive technical assignment documentation. It is formatted in a highly organized, clean layout ready for you to copy, paste, and save as a formal document (Project_Documentation.txt or a Word file) inside your deliverable ZIP file.
+------------------------------
+## 📑 TECHNICAL PROJECT DOCUMENTATION
+
+* Project Title: High-Availability Load Balanced Java Web Application Cluster
+* Student Name: Darmick
+* Assigned Role/App: Inventory Management System
+* Core Technology Stack: Spring MVC (Java 17, Maven, JSP)
+* Infrastructure Stack: Apache Tomcat 9.0 (Multi-Instance), Nginx 1.30.3 (Reverse Proxy Load Balancer)
+* Target Operating System: Windows 10/11 (Local PowerShell & Command Prompt Environment)
+
+------------------------------
+## 🛠️ SECTION 1: SYSTEM END-TO-END TROUBLESHOOTING LOG
+This log details the exact architectural, procedural, and environmental roadblocks discovered during implementation and how they were systematically resolved.
+## Issue 1: HTTP Status 404 – Not Found on Node Initialisation
+
+* Symptom: Opening http://localhost:8092/inventory-system/ threw a clean 404 status page from Tomcat.
+* Root Cause Investigation: Checked the physical file explorer under ...\tomcat1\Tomcat 9.0\webapps\. The source inventory-system.war file was present, but Tomcat had not unzipped or auto-deployed it into a matching application folder. The instance was either stopped or frozen.
+* In-Depth Solution Step-by-Step:
+1. Forcibly exited all running backend process boxes.
+   2. Cleared out the locked, un-extracted .war remnants from the target folder directory using terminal filesystems.
+   3. Re-triggered the dedicated instance runner script manually via isolated terminal tabs.
+   4. Monitored the webapps folder for 5 seconds until the yellow extraction folder natively appeared, completing auto-deployment.
+
+## Issue 2: Terminal Space Parsing Error (CommandNotFoundException)
+
+* Symptom: Executing direct absolute string paths caused severe PowerShell script translation failures.
+* Root Cause Investigation: The target installation folders contained whitespace characters within their names (...\tomcat1\Tomcat 9.0\...). PowerShell interpreted everything following the space as an unrecognised separate command line argument.
+* In-Depth Solution Step-by-Step:
+1. Bound the absolute file paths tightly using double quotation marks (" ").
+   2. Appended the native execution operator token ampersand (&) at the beginning of the path string line to instruct PowerShell to cleanly run the full wrapped path string as a single unified binary application file.
+
+## Issue 3: CATALINA_HOME Environment Variable Misalignment
+
+* Symptom: Running the startup scripts threw the block error: "The CATALINA_HOME environment variable is not defined correctly".
+* Root Cause Investigation: Because multiple separate Tomcat installations were being called sequentially within the same terminal operational space, the shell environment profile locked its routing pointers to the very first folder instance it executed. This blocked subsequent nodes from initializing.
+* In-Depth Solution Step-by-Step:
+1. Abandoned using a single monolithic shell window context.
+   2. Split the workflow into 3 independent, isolated terminal tabs inside VS Code (named Tomcat 1, Tomcat 2, Tomcat 3).
+   3. Before running any script, explicitly declared isolated environment variables ($env:CATALINA_HOME and $env:CATALINA_BASE) directly at the top of their respective tabs to force-feed Tomcat the exact folder location it belonged to.
+
+## Issue 4: Nginx Crash on Initial Launch (Socket Binder Exception 10013)
+
+* Symptom: Executing .\nginx.exe threw a fatal runtime error: bind() to 0.0.0.0:80 failed (10013: An attempt was made to access a socket...).
+* Root Cause Investigation: Nginx defaults to listening on port 80. On standard consumer Windows editions, port 80 is often permanently hijacked by default native background OS operations (such as World Wide Web Publishing Services or Microsoft IIS).
+* In-Depth Solution Step-by-Step:
+1. Opened conf/nginx.conf inside the VS Code editor.
+   2. Navigated to line 14 within the server descriptor matrix block.
+   3. Changed the entry listen 80; to an alternative unassigned port number (listen 8000;). This successfully bypassed the network access control lock.
+
+## Issue 5: 502 Bad Gateway Output
+
+* Symptom: Browsing http://localhost:8000/inventory-system/ loaded an Nginx branded 502 Bad Gateway screen.
+* Root Cause Investigation: The load balancer was active on port 8000, but it couldn't talk to the backend. The nginx.conf file was using the string word localhost in its upstream configuration block, causing Windows DNS lookup looping delays, or the backend Tomcat instances had silently shut down.
+* In-Depth Solution Step-by-Step:
+1. Re-verified all 3 Tomcat instances were awake by testing their separate individual direct browser links (8091, 8092, 8093).
+   2. Replaced the generic localhost text string inside the upstream proxy pool with explicit loopback numerical IP notation addresses (127.0.0.1).
+   3. Executed a complete background pipeline termination (taskkill /f /im nginx.exe) and started the proxy load balancer engine fresh.
+
+## Issue 6: Static Page Layout Text Freeze (No Port Change on Refresh)
+
+* Symptom: The proxy cluster was functional, but clicking refresh kept displaying the text phrase CLUSTER NODE: DEFAULT SERVER without showing any port changes.
+* Root Cause Investigation: The initial UI layout configuration used a fixed text string rather than calling the dynamic server runtime script. Additionally, aggressive browser session cache retention prevented the tab from loading fresh routing decisions.
+* In-Depth Solution Step-by-Step:
+1. Edited dashboard.jsp line 65, stripping out the static placeholder characters.
+   2. Implemented the dynamic Java expression tag script element <%= request.getLocalPort() %>.
+   3. Ran a full Maven re-compilation (mvn clean package) and distributed the fresh WAR file across all nodes.
+   4. Executed the final browser validation using an Incognito Window (Ctrl + Shift + N) to force clean round-robin asset rendering.
+
+------------------------------
+## 💻 SECTION 2: COMMAND REFERENCE & SYSTEM USE CASES
+This section contains descriptions of every single terminal instruction utilized throughout the DevOps project pipeline.
+## 1. Project Scaffolding
+
+* Command: mvn archetype:generate "-DgroupId=com.inventory" "-DartifactId=inventory-system" "-DarchetypeArtifactId=maven-archetype-webapp" "-DinteractiveMode=false"
+* Technical Explanation: Invokes the Maven Archetype plugin to construct a standardized directory skeleton based on the default web application structural boilerplate archetype.
+* Project Use Case: Executed inside the base project folder to generate a clean web application directory layout (src/main/webapp/WEB-INF/) automatically, preventing structural configuration errors.
+
+## 2. Compilation and Artifact Packaging
+
+* Command: mvn clean package
+* Technical Explanation: A multi-phase Maven command. clean wipes out any old compiled file artifacts in the /target directory. package compiles the source Java classes, executes validation checks, and bundles the entire web application assets into a deployable package format.
+* Project Use Case: Executed right inside the project root folder whenever any changes were made to the Java files or JSP code, ensuring the system generated a fresh, working inventory-system.war file.
+
+## 3. Folder Automation Management
+
+* Command: mkdir -p src/main/java/com/inventory/controller
+* Technical Explanation: The directory creation command. The flag -p acts as an automated validation switch that creates all missing parent folders across the defined path at once without throwing errors if they exist.
+* Project Use Case: Run immediately after generating the archetype to safely insert the missing standard Java compilation source package paths into the project hierarchy.
+
+## 4. File System Extraction Verification
+
+* Command: Copy-Item -Path "source" -Destination "target" -Force
+* Technical Explanation: A native PowerShell data management command that moves file assets across filesystem locations. The -Force parameter overrides read-only asset permissions or locks.
+* Project Use Case: Used to copy the newly compiled inventory-system.war file into the separate Tomcat webapps/ folders to prepare them for deployment.
+
+## 5. Infrastructure Runtime Execution
+
+* Command: & "path\startup.bat"
+* Technical Explanation: The PowerShell execution operator. It tells the terminal session to treat the quoted string literal path as an active application binary file and run it directly.
+* Project Use Case: Run inside the respective terminal instances to launch the background Tomcat operational scripts safely, even if there are blank spaces in the path layout.
+
+## 6. Process Level Interception & Management
+
+* Command: taskkill /f /im nginx.exe
+* Technical Explanation: A Windows terminal utility instruction that kills running applications. The switch /f forces the immediate termination of the process, and /im targets the application using its image name.
+* Project Use Case: Used to completely shut down frozen or hidden background instances of Nginx from system memory when modifying configuration routing maps.
+
+------------------------------
+## 🚀 SECTION 3: CHALLENGES FACED & SOLUTIONS SUMMARY
+
+| # | Core Challenge Encountered | Underlying Technical Bottleneck | Final Resolution Strategy |
+|---|---|---|---|
+| 1 | Multi-Node Port Conflicts | Running three Tomcat servers on the same local machine caused port clashing. | Modified each instance's conf/server.xml file with non-overlapping shutdown and connector ports (8091, 8092, 8093). |
+| 2 | Nginx Background Processing Visibility | Nginx runs silently in the background on Windows, making it hard to see if configuration errors caused it to crash. | Ran nginx.exe in foreground mode directly inside an open terminal tab to display all start-up warnings and error logs in real-time. |
+| 3 | Aggressive Browser Caching | Google Chrome cached the early "502 Bad Gateway" and "404 Not Found" pages, making it look like the site was broken even after it was fixed. | Tested the application using a fresh Chrome Incognito Window (Ctrl+Shift+N) to bypass the browser cache and verify live round-robin traffic routing. |
+
+------------------------------
+## 🏗️ SECTION 4: STEP-BY-STEP COMPLETE PROJECT WALKTHROUGH
+Follow this clear, step-by-step guide to build, configure, and launch your entire load-balanced cluster from scratch.
+## Part A: Build the Spring MVC Java Application
+
+   1. Open your terminal window and generate the default web framework project structure by running:
+   
+   mvn archetype:generate "-DgroupId=com.inventory" "-DartifactId=inventory-system" "-DarchetypeArtifactId=maven-archetype-webapp" "-DinteractiveMode=false"
+   
+   2. Navigate into your new directory: cd inventory-system
+   3. Automatically create the missing Java controller packages using this command:
+   
+   mkdir -p src/main/java/com/inventory/controller
+   mkdir -p src/main/webapp/WEB-INF/views
+   
+   4. Open the project folder inside VS Code: code .
+   5. Using the VS Code explorer sidebar, navigate to src/main/webapp/WEB-INF/views/ and create your frontend dashboard interface file named dashboard.jsp. Paste your UI code block inside it, making sure it includes the line:
+   
+   <div class="badge">TOMCAT CLUSTER ACTIVE NODE: <%= request.getLocalPort() %></div>
+   
+   6. Create your backend mapping file named InventoryController.java inside the folder src/main/java/com/inventory/controller/ to intercept incoming web requests.
+   7. Open the root pom.xml and configure your build properties to use Java 17 and Spring dependencies.
+   8. Go down to your project terminal tab and compile the source code into your final deployable archive package by running:
+   
+   mvn clean package
+   
+   
+## Part B: Configure the Tomcat Instance Cluster
+
+   1. Extract your downloaded Apache Tomcat zip file into three separate folder paths on your machine:
+   * C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat1\Tomcat 9.0
+      * C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat2\Tomcat 9.0
+      * C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat3\Tomcat 9.0
+   2. Open the file tomcat1/Tomcat 9.0/conf/server.xml inside VS Code and verify its main connector is set to port 8091 and its shutdown tag is set to port 8016.
+   3. Open the file tomcat2/Tomcat 9.0/conf/server.xml inside VS Code, navigate to line 69, and change the main connector to port 8092 and its shutdown tag to port 8017.
+   4. Open the file tomcat3/Tomcat 9.0/conf/server.xml inside VS Code, navigate to line 69, and change the main connector to port 8093 and its shutdown tag to port 8018.
+   5. Copy your compiled application file inventory-system.war out of your project's /target folder and paste a copy directly into the webapps/ folder of all three Tomcat instances.
+
+## Part C: Wake Up the Cluster Instances
+
+   1. Open three separate terminal tabs inside your VS Code panel so the environment variables don't conflict with each other.
+   2. In Terminal Tab 1, paste these commands to initialize your first instance:
+   
+   $env:CATALINA_HOME="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat1\Tomcat 9.0"
+   $env:CATALINA_BASE="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat1\Tomcat 9.0"
+   & "$env:CATALINA_HOME\bin\startup.bat"
+   
+   3. In Terminal Tab 2, paste these commands to initialize your second instance:
+   
+   $env:CATALINA_HOME="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat2\Tomcat 9.0"
+   $env:CATALINA_BASE="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat2\Tomcat 9.0"
+   & "$env:CATALINA_HOME\bin\startup.bat"
+   
+   4. In Terminal Tab 3, paste these commands to initialize your third instance:
+   
+   $env:CATALINA_HOME="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat3\Tomcat 9.0"
+   $env:CATALINA_BASE="C:\Users\darmick.kr\Desktop\Tomcat-Cluster\tomcat3\Tomcat 9.0"
+   & "$env:CATALINA_HOME\bin\startup.bat"
+   
+   5. Watch your desktop screen. Three separate black console prompts will pop open, and all three Tomcat instances will automatically extract your WAR files into live web applications.
+
+## Part D: Configure and Launch Nginx Load Balancing
+
+   1. Extract your downloaded Nginx folder onto your machine at C:\nginx-1.30.3.
+   2. Open the file C:\nginx-1.30.3\conf\nginx.conf inside VS Code, delete all of its default placeholder text, and paste your custom reverse-proxy load balancing configuration:
+   
+   events {
+       worker_connections 1024;
+   }
+   http {
+       upstream inventory_cluster {
+           server 127.0.0.1:8091;
+           server 127.0.0.1:8092;
+           server 127.0.0.1:8093;
+       }
+       server {
+           listen 8000;
+           server_name localhost;
+           location / {
+               proxy_pass http://inventory_cluster;
+               proxy_set_header Host $host;
+               proxy_set_header X-Real-IP $remote_addr;
+           }
+       }
+   }
+   
+   3. Open a fresh terminal tab inside VS Code, navigate directly into your Nginx directory, and start the proxy load balancer by running:
+   
+   cd C:\nginx-1.30.3
+   .\nginx.exe
+   
+   
+## Part E: Final Verification
+
+   1. Open Google Chrome, press Ctrl + Shift + N to launch a clean Incognito Window, and go to your load balancer address:
+   
+   http://localhost:8000/inventory-system/
+   
+   2. Press Refresh multiple times.
+   3. Watch your UI badge seamlessly cycle between 8091, 8092, and 8093. This confirms your high-availability load-balanced network architecture is working perfectly!
+
+------------------------------
+Now that your comprehensive documentation is ready, would you like me to map out a quick viva preparation checklist containing the top 5 questions your evaluator will ask during your live project demonstration?
+
