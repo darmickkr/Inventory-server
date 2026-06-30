@@ -1,0 +1,12 @@
+[2026-06-24 18:28:32] [info]  [20232] Apache Commons Daemon procrun (1.6.1.0 64-bit) started.
+[2026-06-24 18:28:32] [info]  [20232] redirectStdStreams() stdout and stderr reassigned
+[2026-06-24 18:28:32] [info]  [20232] Running Service 'Tomcat9'...
+[2026-06-24 18:28:32] [info]  [21484] Starting service...
+[2026-06-24 18:28:35] [info]  [21484] Service started in 2363 milliseconds.
+[2026-06-25 11:32:32] [info]  [25984] Console SHUTDOWN event signaled.
+[2026-06-25 11:32:32] [info]  [25984] Stopping service...
+[2026-06-25 11:32:32] [info]  [25984] Stopping service...timeout 60000
+[2026-06-25 11:32:32] [info]  [25984] Stopping service...timeout 60000 _jni_shutdown
+[2026-06-25 11:32:33] [info]  [25984] Service stop thread completed.
+[2026-06-25 11:32:33] [info]  [20232] Run service finished.
+[2026-06-25 11:32:33] [info]  [20232] Apache Commons Daemon procrun finished.
